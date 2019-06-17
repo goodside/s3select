@@ -117,9 +117,9 @@ class ScanOneKey(threading.Thread):
                 if self.record_delimiter is None:
                     self.record_delimiter = "\n"
                 if self.quote_character is None:
-                    self.quote_character = ""
+                    self.quote_character = "\""
                 if self.quote_escape_character is None:
-                    self.quote_escape_character = ""
+                    self.quote_escape_character = "\\"
 
                 input_ser = {
                     'CSV':
@@ -281,8 +281,9 @@ def select(prefixes=None, verbose=False, profile=None, thread_count=150,
             thread = ScanOneKey(
                 files_queue, events_queue, s3, count=count, limit=limit,
                 output_fields=output_fields, field_delimiter=field_delimiter,
-                record_delimiter=record_delimiter, quote_character=None,
-                quote_escape_character=None, allow_quoted_record_delimiter=False,
+                record_delimiter=record_delimiter, quote_character=quote_character,
+                quote_escape_character=quote_escape_character,
+                allow_quoted_record_delimiter=allow_quoted_record_delimiter,
                 where=where, max_retries=max_retries)
 
         # daemon threads allow for fast exit if max number of records has been
