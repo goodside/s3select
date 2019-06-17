@@ -105,9 +105,9 @@ class ScanOneKey(threading.Thread):
                     self.record_delimiter is not None:
 
                 if self.field_delimiter is None:
-                    self.field_delimiter = "\n"
+                    self.field_delimiter = ","
                 if self.record_delimiter is None:
-                    self.record_delimiter = ","
+                    self.record_delimiter = "\n"
 
                 input_ser = {
                     'CSV':
