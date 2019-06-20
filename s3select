@@ -144,6 +144,9 @@ class ScanOneKey(threading.Thread):
             if '.gz' == s3_key.lower()[-3:]:
                 input_ser['CompressionType'] = 'GZIP'
 
+            if '.bz2' == s3_key.lower()[-4:]:
+                input_ser['CompressionType'] = 'BZIP2'
+
             current_try = 0
             while True:
                 try:
