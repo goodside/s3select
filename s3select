@@ -10,10 +10,13 @@ import threading
 import sys
 import time
 
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
 _sentinel = object()
 max_result_limit_reached = False
 total_files = 0
-clear_line = '\r\033[K'
+CLEAR_LINE = '\r\033[K'
 
 
 class S3ListThread(threading.Thread):
@@ -244,13 +247,18 @@ def format_bytes(bytes_count):
         return str(bytes_count // 10 ** 9) + " GB"
 
 
-def refresh_status_bar(
-        files_processed, records_matched, bytes_scanned, verbose):
+def refresh_status_bar(files_processed, records_matched, bytes_scanned, verbose):
     if verbose:
-        print('{}Files processed: {}/{}  Records matched: {}  Bytes scanned: {}'
-              .format(clear_line, files_processed, total_files, records_matched,
-                      format_bytes(bytes_scanned)),
-              file=sys.stderr, end="")
+        eprint(
+            '{}Files processed: {}/{}  Records matched: {}  Bytes scanned: {}'.format(
+                CLEAR_LINE,
+                files_processed,
+                total_files,
+                records_matched,
+                format_bytes(bytes_scanned)
+            ),
+            end=""
+        )
 
 
 def select(prefixes=None, verbose=False, profile=None, thread_count=150,
@@ -317,10 +325,8 @@ def select(prefixes=None, verbose=False, profile=None, thread_count=150,
             if event.max_retries_reached:
                 raise event.exception
             elif verbose:
-                print("{}Exception caught while processing {} (will retry). "
-                      "Exception: {}"
-                      .format(clear_line, event.s3_path, str(event.exception)),
-                      file=sys.stderr)
+                fmt = "{}Exception caught while processing {} (will retry). Exception: {}"
+                eprint(fmt.format(CLEAR_LINE, event.s3_path, str(event.exception)))
 
         bytes_returned = bytes_returned + event.bytes_returned
         bytes_scanned = bytes_scanned + event.bytes_scanned
@@ -335,7 +341,7 @@ def select(prefixes=None, verbose=False, profile=None, thread_count=150,
             else:
                 records_matched = records_matched + 1
                 if verbose:
-                    print(clear_line, file=sys.stderr, end="")
+                    eprint(CLEAR_LINE, end="")
                 if with_filename:
                     print(matched_s3_path + "\t" + record)
                 else:
@@ -348,27 +354,22 @@ def select(prefixes=None, verbose=False, profile=None, thread_count=150,
 
     if count:
         if verbose:
-            print(clear_line, file=sys.stderr, end="")
+            eprint(CLEAR_LINE, end="")
 
         print(records_matched)
 
     if verbose:
-        price_for_bytes_scanned = 0.002 * bytes_scanned / (
-                1024 ** 3)
+        price_for_bytes_scanned = 0.002 * bytes_scanned / (1024 ** 3)
         price_for_bytes_returned = 0.0007 * bytes_returned / (1024 ** 3)
         price_for_requests = 0.0004 * total_files / 1000
 
-        refresh_status_bar(
-            files_processed, records_matched, bytes_scanned, verbose)
-        print("\nCost for data scanned: ${0:.2f}"
-              .format(price_for_bytes_scanned), file=sys.stderr)
-        print("Cost for data returned: ${0:.2f}"
-              .format(price_for_bytes_returned), file=sys.stderr)
-        print("Cost for SELECT requests: ${0:.2f}"
-              .format(price_for_requests), file=sys.stderr)
-        total_cost = price_for_bytes_scanned + price_for_bytes_returned \
-                     + price_for_requests
-        print("Total cost: ${0:.2f}".format(total_cost), file=sys.stderr)
+        refresh_status_bar(files_processed, records_matched, bytes_scanned, verbose)
+        eprint("\nCost for data scanned: ${0:.2f}".format(price_for_bytes_scanned))
+        eprint("Cost for data returned: ${0:.2f}".format(price_for_bytes_returned))
+        eprint("Cost for SELECT requests: ${0:.2f}".format(price_for_requests))
+        eprint("Total cost: ${0:.2f}".format(
+            price_for_bytes_scanned + price_for_bytes_returned + price_for_requests
+        ))
 
 
 if __name__ == "__main__":
