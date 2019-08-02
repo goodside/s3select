@@ -155,11 +155,12 @@ class ScanOneKey(threading.Thread):
             if self.limit > 0:
                 query += " LIMIT " + str(self.limit)
 
-            if '.gz' == s3_key.lower()[-3:]:
+            if s3_key.lower().endswith(".gz"):
                 input_ser['CompressionType'] = 'GZIP'
-
-            if '.bz2' == s3_key.lower()[-4:]:
+            elif s3_key.lower().endswith(".bz2"):
                 input_ser['CompressionType'] = 'BZIP2'
+            elif s3_key.lower().endswith(".gz.parquet") or s3_key.lower().endswith(".parquet"):
+                input_ser = {'Parquet': {}}
 
             current_try = 0
             while True:
